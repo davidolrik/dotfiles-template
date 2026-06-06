@@ -1,0 +1,26 @@
+{{- /* -*- mode: zsh; -*- */ -}}
+# .zshenv: Loaded first for all shells (login, interactive, and non-interactive scripts)
+
+# Move all zsh config files to $HOME/.config/zsh
+# Source them from there instead of keeping them in the home directory.
+export XDG_CONFIG_HOME="{{ .chezmoi.homeDir }}/.config"
+export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+
+# Prepend to PATH only if not already present
+path_prepend() {
+  case ":$PATH:" in
+    *":$1:"*) ;;            # already there — do nothing
+    *) PATH="$1:$PATH" ;;
+  esac
+}
+
+path_prepend "$HOME/.local/bin"
+path_prepend "$HOME/bin"
+
+# Load Homebrew when on macOS
+{{ if eq .chezmoi.os "darwin" -}}
+if [[ -f /opt/homebrew/bin/brew ]]; then
+    export HOMEBREW_NO_ANALYTICS=1
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+{{- end }}

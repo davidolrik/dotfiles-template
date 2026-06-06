@@ -1,0 +1,37 @@
+{{- /* code: language=toml */ -}}
+# Global mise configuration — CLI tools installed by `mise install`
+# (run automatically after every `chezmoi apply`).
+# https://mise.jdx.dev/configuration.html
+
+[tools]
+zoxide = "latest"
+fzf = "latest"
+# yq is used by the custom mise segment in .p10k.zsh
+yq = "latest"
+# usage powers mise's zsh completions
+usage = "latest"
+# node = "lts"
+# python = "latest"
+# ripgrep = "latest"
+{{ if eq .chezmoi.os "darwin" }}
+[env]
+# Lets `brew bundle` find the Brewfile from any directory
+HOMEBREW_BUNDLE_FILE = "{{ .chezmoi.sourceDir }}/global/Brewfile"
+
+[tasks."chezmoi:brew:dump"]
+description = "🍻 Dump list of currently installed apps into Brewfile"
+dir = "{{ .chezmoi.sourceDir }}/global"
+run = "brew bundle dump --force"
+
+[tasks."chezmoi:brew:commit"]
+description = "🍻 Commit Brewfile changes"
+dir = "{{ .chezmoi.sourceDir }}/global"
+wait_for = "chezmoi:brew:dump"
+run = """
+#!/bin/zsh
+if [[ -n "$(git status -s Brewfile)" ]]; then
+    git add Brewfile
+    git commit -m 'chore: Update Brewfile'
+fi
+"""
+{{ end }}

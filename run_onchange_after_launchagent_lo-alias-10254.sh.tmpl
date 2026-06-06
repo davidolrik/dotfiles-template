@@ -1,0 +1,13 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/zsh
+
+# private_Library/LaunchAgents/local.dotfiles.lo-alias-10254.plist.tmpl hash: {{ include "private_Library/LaunchAgents/local.dotfiles.lo-alias-10254.plist.tmpl" | sha256sum }}
+
+echo -n "Loading LaunchAgent: local.dotfiles.lo-alias-10254 .. "
+
+launchctl unload {{ .chezmoi.homeDir }}/Library/LaunchAgents/local.dotfiles.lo-alias-10254.plist 2>/dev/null
+set -e
+launchctl load -w {{ .chezmoi.homeDir }}/Library/LaunchAgents/local.dotfiles.lo-alias-10254.plist
+
+echo "Done!"
+{{ end -}}

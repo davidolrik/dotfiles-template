@@ -1,0 +1,11 @@
+{{- /* code: language=bash */ -}}
+#!/bin/bash
+
+{{ if eq .chezmoi.os "darwin" -}}
+echo "Installing packages"
+cd {{ .chezmoi.sourceDir }}/global
+/opt/homebrew/bin/brew bundle install
+
+# Ensure newly downloaded binaries are available
+hash -r
+{{ end -}}

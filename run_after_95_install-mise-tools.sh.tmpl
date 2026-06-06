@@ -1,0 +1,17 @@
+{{- /* code: language=zsh */ -}}
+#!/bin/zsh
+
+# Always use ~/.local/bin/mise (installed by run_once_00_install-mise.sh),
+# ignoring any other mise in PATH (e.g. from Homebrew) for determinism.
+if [[ ! -x {{ .chezmoi.homeDir }}/.local/bin/mise ]]; then
+    echo "mise not found, skipping"
+    exit 0
+fi
+
+eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
+
+echo "$ mise install"
+{{ .chezmoi.homeDir }}/.local/bin/mise --cd {{ .chezmoi.homeDir }} install
+
+echo "$ mise upgrade"
+{{ .chezmoi.homeDir }}/.local/bin/mise --cd {{ .chezmoi.homeDir }} upgrade

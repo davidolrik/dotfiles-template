@@ -1,0 +1,24 @@
+{{- /* -*- mode: toml; -*- */ -}}
+umask = 0o022
+
+[data.machine]
+{{- if (eq .chezmoi.os "darwin") }}
+name = {{ output "scutil" "--get" "ComputerName" | trim | lower | quote }}
+{{- else }}
+name = {{ output "hostname" "-f" | trim | lower | quote }}
+{{- end }}
+{{- $chassisType := "desktop" }}
+{{- if (eq .chezmoi.os "darwin") }}
+{{-   if contains "MacBook" (output "system_profiler" "SPHardwareDataType") }}
+{{-     $chassisType = "laptop" }}
+{{-   else }}
+{{-     $chassisType = "desktop" }}
+{{-   end }}
+{{- else if (eq .chezmoi.osRelease.id "alpine") }}
+{{-   $chassisType = "embedded" }}
+{{- else if (eq .chezmoi.os "linux") }}
+{{-   $chassisType = (output "sh" "-c" "hostnamectl | grep -i 'Chassis:' | awk -F ':' '{print $2}' | awk '{print $1}'" | trim ) }}
+{{- else if (eq .chezmoi.os "windows") }}
+{{-   $chassisType = (output "powershell.exe" "-noprofile" "-command" "if (Get-WmiObject -Class win32_battery -ComputerName localhost) { echo laptop } else { echo desktop }") }}
+{{- end }}
+type = {{ $chassisType | trim | quote }}

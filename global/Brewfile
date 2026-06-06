@@ -1,0 +1,15 @@
+# Homebrew packages, casks and fonts — installed on macOS via
+# run_once_10_install-packages.sh. Add your own GUI apps here;
+# CLI tools are better managed by mise (~/.config/mise/config.toml).
+
+# 1Password (app + CLI) — used for the SSH agent LaunchAgent
+cask "1password"
+cask "1password-cli"
+
+# Recommended font for powerlevel10k
+cask "font-meslo-lg-nerd-font"
+
+# Examples:
+# cask "iterm2"
+# cask "visual-studio-code"
+# brew "git"

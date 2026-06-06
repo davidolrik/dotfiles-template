@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+set -e
+
+# .zsh_plugins.txt hash: {{ include "dot_config/zsh/dot_zsh_plugins.txt.tmpl" | sha256sum }}
+
+if [[ -d ${ZDOTDIR:-~}/.antidote ]]; then
+    zstyle ':antidote:bundle' use-friendly-names 'yes'
+    source ${ZDOTDIR:-~}/.antidote/antidote.zsh
+    setopt null_glob
+
+    echo "* Removing installed plugins"
+    rm -f ~/.zsh_plugins.zsh
+    for i in $(antidote home)/*; do
+        echo "  $i"
+        rm -rf $i
+    done
+
+    echo "* Installing selected plugins"
+    # Initialize auto completion, so plugins won't fail
+    autoload -Uz compinit
+    compinit
+fi

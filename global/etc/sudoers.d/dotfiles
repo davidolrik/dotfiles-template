@@ -1,0 +1,2 @@
+# Allow loading the loopback alias LaunchAgent without a password prompt
+%admin ALL = (root) NOPASSWD: /sbin/ifconfig lo0 alias 10.254.254.254

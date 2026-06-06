@@ -1,0 +1,10 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+echo "Configuring macOS defaults"
+
+# iTerm: let shell escape sequences (OSC 52) write the pasteboard — used
+# by the `copy` function in ~/.config/zsh/conf.d/40-functions.zsh.
+# iTerm reads this at launch; restart it after the first apply.
+defaults write com.googlecode.iterm2 AllowClipboardAccess -bool true
+{{ end -}}

@@ -1,0 +1,13 @@
+# Personal data shared by all templates on every machine.
+# Edit these values and commit — they follow you to each new host,
+# so `chezmoi init` never has to ask.
+# Available in templates as .me.fullname, .me.email.personal, etc.
+
+[me]
+fullname = "Your Name"
+
+[me.email]
+personal = "you@example.com"
+
+[me.github]
+username = "your-github-username"

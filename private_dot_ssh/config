@@ -1,0 +1,8 @@
+# -*- mode: ssh_config; -*-
+# Modern cipher preferences
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,aes128-gcm@openssh.com,aes256-cbc,aes192-cbc,aes128-cbc
+
+# All host configuration lives in config.d/ — see config.d/README.md
+Include ~/.ssh/config.d/*.config
+
+UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.d/*

@@ -1,0 +1,14 @@
+{{- /* code: language=zsh */ -}}
+#!/bin/zsh
+
+if [[ -x ~/.local/bin/mise ]]; then
+    # The sed patches an upstream bug in usage-cli's zsh template (<= 3.4.0):
+    # colons are escaped in the display strings but not in the insert
+    # strings, and zsh's _describe parses `candidate:description` in BOTH
+    # arrays — so task names containing colons (chezmoi:brew:dump) get
+    # truncated at the first colon when completing. If upstream changes the
+    # line, the sed becomes a harmless no-op.
+    ~/.local/bin/mise completion zsh \
+        | sed 's|inserts+=("$insert")|inserts+=("${insert//:/\\\\:}")|' \
+        > ~/.config/zsh/completions.d/_mise
+fi

@@ -1,0 +1,8 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+# global/etc/sudoers.d/dotfiles hash: {{ include "global/etc/sudoers.d/dotfiles" | sha256sum }}
+
+echo "Installing sudo config: /etc/sudoers.d/dotfiles"
+sudo install -m 0440 {{ .chezmoi.sourceDir }}/global/etc/sudoers.d/dotfiles /etc/sudoers.d/dotfiles
+{{ end -}}

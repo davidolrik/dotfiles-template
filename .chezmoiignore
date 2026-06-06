@@ -1,0 +1,25 @@
+{{- /* -*- mode: gitignore; -*- */ -}}
+# Project files
+README.md
+LICENSE
+.editorconfig
+
+# README.md files in subdirectories
+**/README.md
+
+# Files in global/ are deployed via run scripts, not chezmoi apply
+global
+
+# macOS only
+{{- if ne .chezmoi.os "darwin" }}
+Library
+{{- end }}
+
+# Machine-specific files: embed the machine name in the filename and add a
+# conditional ignore here, then the file is only deployed on that machine.
+# The machine name is auto-detected in .chezmoi.toml.tmpl — check yours with:
+#   chezmoi data | grep -A2 machine
+# Example for a machine named "work-laptop":
+{{- if ne .machine.name "work-laptop" }}
+# .ssh/config.d/*-work-laptop-*.config
+{{- end }}
