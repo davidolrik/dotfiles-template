@@ -20,3 +20,10 @@ fi
 if (( ${+_user_shell} )) && [[ ! -t 1 ]]; then
   export CLICOLOR_FORCE=1 FORCE_COLOR=3 PY_COLORS=1 COLUMNS=${COLUMNS:-$(tput cols)}
 fi
+
+# ---- Line editor ----
+# Pin the emacs keymap explicitly. zsh otherwise auto-selects emacs vs vi from
+# $VISUAL/$EDITOR at first prompt; the atuin pty-proxy spawns the inner shell
+# with an environment that flips this to vi. Setting it here, before any tool
+# binds keys, keeps line editing in emacs regardless of the inherited environment.
+bindkey -e
