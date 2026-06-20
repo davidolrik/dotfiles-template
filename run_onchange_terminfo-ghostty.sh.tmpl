@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+set -e
+
+# global/terminfo/xterm-ghostty.terminfo hash: {{ include "global/terminfo/xterm-ghostty.terminfo" | sha256sum }}
+
+# Compile the Ghostty terminfo into ~/.terminfo so TERM=xterm-ghostty is
+# recognised on this host -- most importantly when SSH-ing in from Ghostty,
+# where the remote frequently lacks the entry.
+#
+# Regenerate global/terminfo/xterm-ghostty.terminfo (run from the chezmoi
+# source directory):
+#
+#   /opt/homebrew/opt/ncurses/bin/infocmp -x -1 xterm-ghostty | grep -v '^#' \
+#     > global/terminfo/xterm-ghostty.terminfo
+
+if ! command -v tic >/dev/null 2>&1; then
+    echo "* tic not found, skipping Ghostty terminfo install"
+    exit 0
+fi
+
+echo "* Installing Ghostty terminfo (xterm-ghostty) into ~/.terminfo"
+tic -x -o "$HOME/.terminfo" "{{ .chezmoi.sourceDir }}/global/terminfo/xterm-ghostty.terminfo"
