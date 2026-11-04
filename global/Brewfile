@@ -9,6 +9,10 @@ cask "1password-cli"
 # Recommended font for powerlevel10k
 cask "font-meslo-lg-nerd-font"
 
+# eza (better ls): mise only installs it on Linux, the registry would fall
+# back to an Intel build on macOS
+brew "eza"
+
 # Examples:
 # cask "iterm2"
 # cask "visual-studio-code"

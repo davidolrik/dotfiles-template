@@ -1,0 +1,71 @@
+# Tasks for maintaining this repo. They act on the source directory, so they
+# live here rather than in the global mise config: run them from inside the
+# repo (`chezmoi cd`) or from anywhere with `mise -C "$(chezmoi source-path)" run <task>`.
+
+[tasks.help]
+description = "📖 Show what's available (You are looking at it 😎)"
+alias = ["default"]
+run = "mise tasks --local"
+
+[tasks.test]
+description = "🧪 Run the tests"
+run = "for t in tests/test_*.zsh; do echo \"## $t\"; zsh \"$t\" || exit 1; done"
+
+[tasks."chezmoi:brew:dump"]
+description = "🍻 Dump list of currently installed apps into Brewfile"
+dir = "global"
+run = "brew bundle dump --force"
+
+[tasks."chezmoi:brew:commit"]
+description = "🍻 Commit Brewfile changes"
+dir = "global"
+wait_for = "chezmoi:brew:dump"
+run = """
+#!/bin/zsh
+if [[ -n "$(git status -s Brewfile)" ]]; then
+    git add Brewfile
+    git commit -m 'chore: Update Brewfile'
+fi
+"""
+
+[tasks."chezmoi:mise:bump"]
+description = "📦✨ Bump the locked mise tool versions and record them in chezmoi"
+# Arguments to a task go to its last step; the usage spec is what gets this
+# flag to the lock step instead, as $usage_minimum_release_age.
+usage = 'flag "--minimum-release-age <age>" help="Also take releases younger than the default 24h, e.g. 0"'
+# The lock is resolved from the live config, so it has to be the one chezmoi
+# manages: a local edit (a `mise use -g` of a development build, say) would
+# otherwise be pinned for every machine. Dev builds belong in ~/bin instead.
+# `chezmoi verify` fails silently, so the step says why and shows the diff.
+run = [
+  "chezmoi verify ~/.config/mise/config.toml || { echo 'The live ~/.config/mise/config.toml differs from what chezmoi manages; run chezmoi apply first. The difference:' >&2; chezmoi diff ~/.config/mise/config.toml >&2; exit 1; }",
+  "mise lock --global --bump ${usage_minimum_release_age:+--minimum-release-age=$usage_minimum_release_age}",
+  "mise --cd ~ install",
+  # npm tools lock through a sidecar dir (locks/npm-<tool>/<version>) that the
+  # lock names by path. mise drops the old one from the live locks dir on a
+  # bump, but `chezmoi add` only adds, so stale sidecars are pruned from the
+  # source tree first. Bump from a machine that has every feature: a lock
+  # entry for a tool this machine lacks is kept (lockfile_auto_prune = false)
+  # and still needs its sidecar shipped.
+  "for d in dot_config/mise/locks/*/*/; do [ -e \"$d\" ] || continue; [ -d ~/.config/mise/locks/\"${d#dot_config/mise/locks/}\" ] || rm -r \"$d\"; done",
+  "chezmoi add ~/.config/mise/mise.lock; [ -d ~/.config/mise/locks ] && chezmoi add ~/.config/mise/locks || true",
+]
+
+[tasks."chezmoi:mise:lock:commit"]
+description = "🚀 Commit bumped mise tool versions"
+raw = true
+run = """
+#!/bin/zsh
+# The tools whose locked version differs between HEAD and the working tree.
+versions() { perl -ne 'if (/^\\[\\[tools\\.(.+)\\]\\]/) { ($t = $1) =~ s/"//g } elsif (/^version = "(.*)"/ && $t) { print "$t $1\\n"; undef $t }' }
+# The sidecars under locks/ are part of the lock and travel with it.
+if [[ -n "$(git status -s dot_config/mise/mise.lock dot_config/mise/locks)" ]]; then
+    git add -A dot_config/mise/mise.lock dot_config/mise/locks
+    bumped=$(comm -13 <(git show HEAD:dot_config/mise/mise.lock 2>/dev/null | versions | sort) <(versions < dot_config/mise/mise.lock | sort) | perl -lane 'push @t, $F[0]; END { print join ", ", @t }')
+    if [[ -n "$bumped" ]]; then
+        git commit -m "chore: Bump mise tools: $bumped"
+    else
+        git commit -m "chore: Sync mise lock sidecars"
+    fi
+fi
+"""

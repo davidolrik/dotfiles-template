@@ -1,24 +1,52 @@
 {{- /* -*- mode: toml; -*- */ -}}
+
+{{- /* Default name is the short hostname */ -}}
+{{- $name := .chezmoi.hostname | lower -}}
+
+{{- /* On Darwin use lower case computer name */ -}}
+{{- if (eq .chezmoi.os "darwin") -}}
+  {{- $name = output "scutil" "--get" "ComputerName" | trim | lower -}}
+{{- end -}}
+
+{{- /* Figure out computer type */ -}}
+{{- $chassisType := "desktop" }}
+{{- if (eq .chezmoi.os "darwin") -}}
+{{-   if contains "MacBook" (output "system_profiler" "SPHardwareDataType") -}}
+{{-     $chassisType = "laptop" -}}
+{{-   else -}}
+{{-     $chassisType = "desktop" -}}
+{{-   end -}}
+{{- else if (eq .chezmoi.osRelease.id "alpine") -}}
+{{-   $chassisType = "embedded" -}}
+{{- else if (eq .chezmoi.os "linux") -}}
+{{-   $chassisType = (output "sh" "-c" "hostnamectl | grep -i 'Chassis:' | awk -F ':' '{print $2}' | awk '{print $1}'" | trim ) -}}
+{{- else if (eq .chezmoi.os "windows") -}}
+{{-   $chassisType = (output "powershell.exe" "-noprofile" "-command" "if (Get-WmiObject -Class win32_battery -ComputerName localhost) { echo laptop } else { echo desktop }") -}}
+{{- end -}}
+
+{{- /* Features: one yes/no question each, defaulting to the previous answer. */ -}}
+{{- /* The essentials are for every machine, saying no leaves the bare minimum. */ -}}
+{{- writeToStdout (print "Choose the features for '" $name "'\n") -}}
+{{- $wantEssentials := promptBool "  Do you want essential tools"    (dig "feature" "essentials"   true  .) -}}
+{{- $wantNiceToHave := promptBool "  Do you want nice to have tools" (dig "feature" "nice_to_have" false .) -}}
+{{- $wantDevTools   := promptBool "  Do you want developer tools"    (dig "feature" "dev"          false .) -}}
+
+# Personal data lives in .chezmoidata/user.toml
+# Only feature choices and auto-detected data belong here.
 umask = 0o022
 
-[data.machine]
-{{- if (eq .chezmoi.os "darwin") }}
-name = {{ output "scutil" "--get" "ComputerName" | trim | lower | quote }}
-{{- else }}
-name = {{ output "hostname" "-f" | trim | lower | quote }}
-{{- end }}
-{{- $chassisType := "desktop" }}
-{{- if (eq .chezmoi.os "darwin") }}
-{{-   if contains "MacBook" (output "system_profiler" "SPHardwareDataType") }}
-{{-     $chassisType = "laptop" }}
-{{-   else }}
-{{-     $chassisType = "desktop" }}
-{{-   end }}
-{{- else if (eq .chezmoi.osRelease.id "alpine") }}
-{{-   $chassisType = "embedded" }}
-{{- else if (eq .chezmoi.os "linux") }}
-{{-   $chassisType = (output "sh" "-c" "hostnamectl | grep -i 'Chassis:' | awk -F ':' '{print $2}' | awk '{print $1}'" | trim ) }}
-{{- else if (eq .chezmoi.os "windows") }}
-{{-   $chassisType = (output "powershell.exe" "-noprofile" "-command" "if (Get-WmiObject -Class win32_battery -ComputerName localhost) { echo laptop } else { echo desktop }") }}
-{{- end }}
+# Selected features - run `chezmoi init` to change them
+[data.feature]
+essentials = {{ $wantEssentials }}
+nice_to_have = {{ $wantNiceToHave }}
+dev = {{ $wantDevTools }}
+# Not a choice: follows from the operating system
+macos = {{ eq .chezmoi.os "darwin" }}
+
+# Computed machine data
+[data.me.machine]
+# name is a short, stable name for this box: the ComputerName on macOS and
+# the short hostname everywhere else. Deliberately not the FQDN, which drifts
+# with the network (box.local, box.lan, box.example.com …).
+name = {{ $name | quote }}
 type = {{ $chassisType | trim | quote }}

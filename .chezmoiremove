@@ -1,0 +1,5 @@
+# Targets chezmoi deletes on apply — files an earlier revision of this repo
+# installed under a name that no longer exists in the source tree.
+.config/zsh/conf.d/50-tools.zsh
+.config/zsh/conf.d/70-plugins.zsh
+.config/zsh/conf.d/80-deferred-hooks.zsh

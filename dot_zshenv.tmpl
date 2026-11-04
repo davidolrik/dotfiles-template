@@ -4,6 +4,7 @@
 # Move all zsh config files to $HOME/.config/zsh
 # Source them from there instead of keeping them in the home directory.
 export XDG_CONFIG_HOME="{{ .chezmoi.homeDir }}/.config"
+export XDG_DATA_HOME="{{ .chezmoi.homeDir }}/.local/share"
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 
 # Prepend to PATH only if not already present
@@ -14,8 +15,23 @@ path_prepend() {
   esac
 }
 
+# Append to PATH only if not already present
+path_append() {
+  case ":$PATH:" in
+    *":$1:"*) ;;            # already there — do nothing
+    *) PATH="$PATH:$1" ;;
+  esac
+}
+
+# ~/bin is the deliberate-override directory; conf.d/80-path-priority.zsh keeps
+# it at the front after macOS path_helper and mise have had their say.
 path_prepend "$HOME/.local/bin"
 path_prepend "$HOME/bin"
+
+# Ubuntu ships /usr/sbin and /sbin in PATH for all users; Debian only adds
+# them for root. Append them so admin tools are reachable on both.
+path_append "/usr/sbin"
+path_append "/sbin"
 
 # Load Homebrew when on macOS
 {{ if eq .chezmoi.os "darwin" -}}

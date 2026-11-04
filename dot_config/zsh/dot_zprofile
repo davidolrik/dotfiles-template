@@ -1,0 +1,15 @@
+# -*- mode: zsh; -*-
+# .zprofile: login shells, sourced after /etc/zprofile
+
+# macOS runs path_helper from /etc/zprofile, which rebuilds PATH with the
+# system directories first and everything .zshenv prepended appended behind
+# them. Restoring the order here rather than only from .zshrc is what makes it
+# consistent across every invocation: `zsh -lc`, launchd agents and ssh
+# commands are login shells that never reach .zshrc, and without this they
+# would resolve commands differently than an interactive prompt does.
+#
+# conf.d/80-path-priority.zsh is the single definition of that ordering; it is
+# sourced again from .zshrc for interactive shells, and is written to be safe
+# to source more than once.
+[[ -r "$ZDOTDIR/conf.d/80-path-priority.zsh" ]] &&
+  source "$ZDOTDIR/conf.d/80-path-priority.zsh"

@@ -1859,7 +1859,7 @@ function prompt_mise() {
   # Silently skip when mise or yq isn't available (yet)
   (( $+commands[mise] && $+commands[yq] )) || return
   local plugins_raw=$(
-    IGNORE_TOOLS='watchexec|just|hurl|usage|changie|pre-commit|prek'
+    IGNORE_TOOLS='watchexec|just|hurl|usage|changie|pre-commit|prek|git-lfs'
     mise ls --current --offline --json |
     yq -oc "
       to_entries                                                                  | # Convert to list of objects

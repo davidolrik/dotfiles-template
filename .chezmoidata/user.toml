@@ -2,6 +2,8 @@
 # Edit these values and commit — they follow you to each new host,
 # so `chezmoi init` never has to ask.
 # Available in templates as .me.fullname, .me.email.personal, etc.
+# Machine-specific data (.me.machine) and the feature choices (.feature)
+# are detected and asked for in .chezmoi.toml.tmpl instead.
 
 [me]
 fullname = "Your Name"

@@ -8,7 +8,7 @@ umask 022
 # populated on Apple-internal systems.
 # $^path applies the glob qualifier to each array element; (N-/) keeps
 # only entries that resolve (through symlinks) to existing directories.
-# This must run before tools that snapshot PATH (mise in 50-tools.zsh) —
+# This must run before tools that snapshot PATH (mise in 50-interactive.zsh) —
 # their precmd hooks rebuild PATH from that snapshot, so filtering later
 # gets undone at the first prompt.
 path=($^path(N-/))
@@ -22,8 +22,12 @@ else
     export LC_CTYPE="C.UTF-8"
 fi
 
-# Editor
-export EDITOR="${EDITOR:-vi}"
+# Editor: helix when installed (an essential tool), otherwise vi
+if command -v hx > /dev/null; then
+    export EDITOR="hx"
+else
+    export EDITOR="${EDITOR:-vi}"
+fi
 
 # History options
 export HISTFILE=~/.zsh_history

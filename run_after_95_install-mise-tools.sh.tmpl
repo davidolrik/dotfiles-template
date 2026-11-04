@@ -10,8 +10,11 @@ fi
 
 eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
 
+# Stale registry metadata would make mise resolve against what it last saw
+echo "$ mise cache clear"
+{{ .chezmoi.homeDir }}/.local/bin/mise cache clear
+
+# Installs the versions pinned by ~/.config/mise/mise.lock. Upgrading is a
+# deliberate step: `mise run chezmoi:mise:bump` in the source directory.
 echo "$ mise install"
 {{ .chezmoi.homeDir }}/.local/bin/mise --cd {{ .chezmoi.homeDir }} install
-
-echo "$ mise upgrade"
-{{ .chezmoi.homeDir }}/.local/bin/mise --cd {{ .chezmoi.homeDir }} upgrade

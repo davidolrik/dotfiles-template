@@ -3,6 +3,8 @@
 README.md
 LICENSE
 .editorconfig
+mise.toml
+tests
 
 # README.md files in subdirectories
 **/README.md
@@ -20,6 +22,6 @@ Library
 # The machine name is auto-detected in .chezmoi.toml.tmpl — check yours with:
 #   chezmoi data | grep -A2 machine
 # Example for a machine named "work-laptop":
-{{- if ne .machine.name "work-laptop" }}
+{{- if ne .me.machine.name "work-laptop" }}
 # .ssh/config.d/*-work-laptop-*.config
 {{- end }}

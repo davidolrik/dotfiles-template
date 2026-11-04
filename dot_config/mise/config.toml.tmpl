@@ -2,36 +2,67 @@
 # Global mise configuration — CLI tools installed by `mise install`
 # (run automatically after every `chezmoi apply`).
 # https://mise.jdx.dev/configuration.html
+#
+# Tools go in the [tools] block for the feature they belong to (see
+# "Machine features" in README.md) — the top of the table for every machine.
+# tests/test_mise-config.zsh checks that every tool is behind exactly the
+# feature it is listed under.
+
+[settings]
+# Versions are pinned by mise.lock next to this file, shared by every machine
+# through chezmoi. A machine with fewer features must leave the tools it does
+# not have in its copy, or chezmoi would see the lockfile as changed after
+# every install.
+lockfile = true
+lockfile_auto_prune = false
+lockfile_platforms = ["macos-arm64", "linux-x64", "linux-arm64"]
 
 [tools]
-zoxide = "latest"
-fzf = "latest"
-# yq is used by the custom mise segment in .p10k.zsh
-yq = "latest"
+herdr = "latest"
 # usage powers mise's zsh completions
 usage = "latest"
+# yq is used by the custom mise segment in .p10k.zsh
+yq = "latest"
+fzf = "latest"
+"github:dalance/procs" = "latest"
+"github:atuinsh/atuin" = { version = "latest", strip_components = 1, postinstall = "atuin gen-completions --shell zsh > ~/.config/zsh/completions.d/_atuin" }
+# eza comes from the Brewfile on macOS; the registry would fall back to an Intel build there
+"github:eza-community/eza" = { version = "latest", os = ["linux"], matching = "unknown-linux-gnu.tar.gz" }
+zoxide = { version = "latest", postinstall = "cp $(find \"$MISE_TOOL_INSTALL_PATH\" -name _zoxide) ~/.config/zsh/completions.d/" }
+bat = { version = "latest", postinstall = "bat --completion zsh > ~/.config/zsh/completions.d/_bat && bat cache --build" }
+doggo = { version = "latest", postinstall = "doggo completions zsh > ~/.config/zsh/completions.d/_doggo" }
+"github:davidolrik/ssh-inspect" = { version = "latest", postinstall = "ssh-inspect completion zsh > ~/.config/zsh/completions.d/_ssh-inspect" }
+ripgrep = { version = "latest", postinstall = "rg --generate complete-zsh > ~/.config/zsh/completions.d/_rg" }
+# keyring-cli is one file per OS: an Apple silicon build for macOS and an Intel
+# one for Linux, which would not run on ARM Linux.
+{{- if not (and (eq .chezmoi.os "linux") (eq .chezmoi.arch "arm64")) }}
+"github:open-source-cooperative/keyring-rs" = { version = "latest", bin = "keyring-cli" }
+{{- end }}
+{{- if .feature.essentials }}
+helix = "latest"
+"github:davidolrik/overseer" = "latest"
+superfile = "latest"
+dua = "latest"
+"aqua:fujiapple852/trippy" = "latest"
+fnox = "latest"
+"github:showwin/speedtest-go" = "latest"
+fd = { version = "latest", postinstall = "fd --gen-completions zsh > ~/.config/zsh/completions.d/_fd" }
+{{- end }}
+{{- if .feature.nice_to_have }}
+fastfetch = "latest"
+hexyl = "latest"
+lnav = "latest"
+bottom = "latest"
+dust = "latest"
+{{- end }}
+{{- if .feature.dev }}
+worktrunk = "latest"
+"aqua:abhinav/git-spice" = "latest"
 # node = "lts"
 # python = "latest"
-# ripgrep = "latest"
-{{ if eq .chezmoi.os "darwin" }}
+{{- end }}
+{{ if .feature.macos }}
 [env]
 # Lets `brew bundle` find the Brewfile from any directory
 HOMEBREW_BUNDLE_FILE = "{{ .chezmoi.sourceDir }}/global/Brewfile"
-
-[tasks."chezmoi:brew:dump"]
-description = "🍻 Dump list of currently installed apps into Brewfile"
-dir = "{{ .chezmoi.sourceDir }}/global"
-run = "brew bundle dump --force"
-
-[tasks."chezmoi:brew:commit"]
-description = "🍻 Commit Brewfile changes"
-dir = "{{ .chezmoi.sourceDir }}/global"
-wait_for = "chezmoi:brew:dump"
-run = """
-#!/bin/zsh
-if [[ -n "$(git status -s Brewfile)" ]]; then
-    git add Brewfile
-    git commit -m 'chore: Update Brewfile'
-fi
-"""
 {{ end }}
