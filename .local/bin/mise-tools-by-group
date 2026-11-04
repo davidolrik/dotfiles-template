@@ -1,0 +1,81 @@
+#!/usr/bin/env perl
+# Lists the tools mise can install and the feature group each belongs to.
+#
+# Reads the [tools] table of the chezmoi template for ~/.config/mise/config.toml
+# as text. A tool inside a `{{- if .feature.X }}` block belongs to group X; one
+# outside any block goes to every machine and is listed under "all". A guard
+# on operating system or architecture is not a group, so its tools stay in the
+# enclosing one. The template is read rather than the rendered config because
+# the rendered config only has the tools this machine asked for.
+#
+# Usage: mise-tools-by-group [--color=auto|always|never] [template]
+#
+# Color is on when stdout is a terminal and NO_COLOR is unset, off otherwise;
+# --color forces it either way. Each group gets its own color so the eye can
+# follow where one ends and the next begins.
+use strict;
+use warnings;
+
+my $color = "auto";
+my @args;
+for (@ARGV) {
+    if (/^--color(?:=(\w+))?$/) { $color = $1 // "always" }
+    else { push @args, $_ }
+}
+my $template = shift @args // "$ENV{HOME}/.config/mise/config.toml.tmpl";
+my $use_color = $color eq "always" ? 1
+              : $color eq "never"  ? 0
+              : -t STDOUT && !$ENV{NO_COLOR};
+open my $fh, '<', $template or die "cannot read $template: $!\n";
+
+my @rows;               # [group, tool, note]
+my @stack;              # enclosing template blocks, "" for non-feature guards
+my $in_tools = 0;
+while (my $line = <$fh>) {
+    chomp $line;
+    if ($line =~ /^\[tools\]/) { $in_tools = 1; next }
+    next unless $in_tools;
+    last if $line =~ /^\s*$/ || ($line =~ /^\[/ && $line !~ /^\[tools\]/);
+
+    if ($line =~ /^\{\{-?\s*if\s+(.*?)\s*-?\}\}/) {
+        my $cond = $1;
+        push @stack, $cond =~ /^\.feature\.(\w+)$/ ? $1 : "";
+        next;
+    }
+    if ($line =~ /^\{\{-?\s*end\s*-?\}\}/) { pop @stack; next }
+    next if $line =~ /^\s*#/ || $line =~ /^\{\{/;
+
+    next unless $line =~ /^(?:"([^"]+)"|([A-Za-z0-9_.-]+))\s*=\s*(.*)$/;
+    my ($tool, $value) = ($1 // $2, $3);
+    my ($group) = grep { $_ ne "" } reverse @stack;
+    my $note = $value =~ /\bos\s*=\s*\[\s*"([^"]+)"\s*\]/ ? "$1 only" : "";
+    push @rows, [$group // "all", $tool, $note];
+}
+close $fh;
+
+my $w0 = 5; my $w1 = 4;
+for (@rows) { $w0 = length $_->[0] if length $_->[0] > $w0; $w1 = length $_->[1] if length $_->[1] > $w1 }
+# Cells are padded before they are colored, so the escapes never shift a column,
+# and trailing empty cells are dropped so no line ends in padding.
+my @palette = qw(36 32 33 35 34 31 96 92 93 95 94 91);
+my %group_color;
+sub paint { my ($code, $text) = @_; $use_color && $code ne "" ? "\e[${code}m$text\e[0m" : $text }
+sub line {
+    my ($cells, $codes) = @_;
+    my @widths = ($w0, $w1, 0);
+    my @text = @$cells;
+    my @code = @$codes;
+    while (@text && $text[-1] eq "") { pop @text; pop @code }
+    my @out;
+    for my $i (0 .. $#text) {
+        my $cell = $i < $#text ? sprintf("%-$widths[$i]s", $text[$i]) : $text[$i];
+        push @out, paint($code[$i], $cell);
+    }
+    print join("  ", @out), "\n";
+}
+line(["GROUP", "TOOL", "NOTE"], ["1", "1", "1"]);
+for my $row (@rows) {
+    my $group = $row->[0];
+    $group_color{$group} = $palette[keys(%group_color) % @palette] unless exists $group_color{$group};
+    line($row, [$group_color{$row->[0]}, "", "2"]);
+}

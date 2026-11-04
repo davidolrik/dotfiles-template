@@ -51,6 +51,10 @@ run = [
   "chezmoi add ~/.config/mise/mise.lock; [ -d ~/.config/mise/locks ] && chezmoi add ~/.config/mise/locks || true",
 ]
 
+[tasks."chezmoi:mise:tools"]
+description = "📦 List the tools mise can install and the feature group each belongs to"
+run = "./.local/bin/mise-tools-by-group dot_config/mise/config.toml.tmpl"
+
 [tasks."chezmoi:mise:lock:commit"]
 description = "🚀 Commit bumped mise tool versions"
 raw = true

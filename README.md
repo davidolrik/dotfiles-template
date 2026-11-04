@@ -181,6 +181,7 @@ add one, put it in the `[tools]` block for the feature it belongs to — the
 top of the table for every machine — and give it a line in
 `tests/test_mise-config.zsh`, which checks that every tool is behind exactly
 the feature it is listed under.
+`mise run chezmoi:mise:tools` lists every tool with its group.
 
 Versions are pinned by `dot_config/mise/mise.lock`, which chezmoi puts next
 to the config on every machine, so they all install the same versions and

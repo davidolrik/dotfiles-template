@@ -18,7 +18,7 @@ assert_eq() {
 
 print -r -- "== chezmoi tasks are local to the repo =="
 local_tasks=$(python3 -c 'import sys, tomllib; print("\n".join(tomllib.load(open(sys.argv[1], "rb"))["tasks"]))' $MISE_TOML)
-for t in chezmoi:brew:dump chezmoi:brew:commit chezmoi:mise:bump chezmoi:mise:lock:commit test; do
+for t in chezmoi:brew:dump chezmoi:brew:commit chezmoi:mise:bump chezmoi:mise:tools chezmoi:mise:lock:commit test; do
   assert_eq "$t is defined in mise.toml" "$(print -r -- $local_tasks | grep -cx $t)" "1"
 done
 assert_eq "the global config defines no tasks" "$(grep -c '^\[tasks' $GLOBAL_TEMPLATE)" "0"

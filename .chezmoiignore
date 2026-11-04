@@ -5,6 +5,8 @@ LICENSE
 .editorconfig
 mise.toml
 tests
+# Used by the chezmoi:mise:tools task, not installed
+.local/bin/mise-tools-by-group
 
 # README.md files in subdirectories
 **/README.md
