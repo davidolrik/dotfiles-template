@@ -39,6 +39,34 @@ On macOS the first apply will install Homebrew (if missing), run
 `brew bundle`, install mise and its tools, set up antidote, and load the
 LaunchAgents. The sudoers step will prompt for your password once.
 
+### A new Mac, a repo behind ssh, keys in 1Password
+
+chezmoi has to clone your repo before it can run anything from it. With a
+public repo the command above is all it takes, but a repo that is only
+reachable over ssh needs git and a key first, and on a new Mac with the keys in
+1Password neither is there yet. `bootstrap.sh` puts them in place and then runs
+the chezmoi installer:
+
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/davidolrik/dotfiles-template/main/bootstrap.sh)" -- <your-repo-url>
+```
+
+It installs Homebrew (which brings git) and 1Password, and stops once for the
+step it cannot do: signing in to 1Password and turning on
+Settings → Developer → "Use the SSH Agent". Run it again after that. It then
+tries the keys in the agent against your repo one at a time, and runs
+`chezmoi init --apply` with the one that works. Everything after the repo url
+is passed on to `chezmoi init`. The host key of your git host is accepted on
+first sight and saved in `~/.ssh/known_hosts`. No ssh config is written; that
+is chezmoi's to deploy.
+
+The script is not changed lightly, but `main` can change. To run the exact
+script you have read, replace `main` with the commit you read it at:
+
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/davidolrik/dotfiles-template/<commit-sha>/bootstrap.sh)" -- <your-repo-url>
+```
+
 ## Layout
 
 | Source | Target | Purpose |
@@ -54,6 +82,7 @@ LaunchAgents. The sudoers step will prompt for your password once.
 | `private_Library/LaunchAgents/` | `~/Library/LaunchAgents/` | macOS LaunchAgents |
 | `global/` | — | Deployed via run scripts, not `chezmoi apply` (Brewfile, sudoers) |
 | `mise.toml` | — | Tasks for maintaining this repo (`mise run help`) |
+| `bootstrap.sh` | — | Gets the repo onto a new Mac over ssh, before chezmoi is there |
 | `tests/` | — | Tests, run with `mise run test` |
 
 ## Zsh config

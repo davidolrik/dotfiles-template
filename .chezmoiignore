@@ -5,6 +5,8 @@ LICENSE
 .editorconfig
 mise.toml
 tests
+# Run by hand on a new machine, before chezmoi is there
+bootstrap.sh
 # Used by the chezmoi:mise:tools task, not installed
 .local/bin/mise-tools-by-group
 
